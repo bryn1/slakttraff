@@ -59,7 +59,7 @@ async function onLogin(ev) {
     const errEl = $("password-error");
     errEl.textContent = "";
     try {
-        const res = await fetch("/api/admin/auth", {
+        const res = await fetch("api/admin/auth", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ password: $("password-input").value }),
@@ -95,9 +95,9 @@ let refreshTimer = null;
 async function loadAll() {
     try {
         const [persons, replies, log] = await Promise.all([
-            apiFetch("/api/persons/?limit=500"),
-            apiFetch("/api/rsvp-replies/?limit=500"),
-            apiFetch("/api/admin/change-log?limit=500"),
+            apiFetch("api/persons/?limit=500"),
+            apiFetch("api/rsvp-replies/?limit=500"),
+            apiFetch("api/admin/change-log?limit=500"),
         ]);
         $("api-error").hidden = true;
         renderCounts(persons);
