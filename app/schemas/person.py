@@ -100,3 +100,20 @@ class RsvpReplyResponse(BaseModel):
     created_at: datetime
 
     model_config = {"frozen": True}
+
+
+class ChangeLogResponse(BaseModel):
+    """API response schema for a change-log entry (admin view only)."""
+
+    id: int
+    person_id: int
+    person_name: str
+    action: str
+    old_status: Optional[str] = None
+    new_status: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: datetime
+
+    model_config = {"frozen": True}

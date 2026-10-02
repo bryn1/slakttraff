@@ -8,7 +8,9 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
 from app.migrations import run_startup_migrations
-from app.routers import admin, auth, persons, registrations, rsvp_replies
+from app.routers import (
+    admin, auth, change_log, persons, registrations, rsvp_replies,
+)
 from app.seed import seed_persons_if_empty
 
 # Create database tables, backfill columns on pre-existing DBs, and seed the
@@ -42,6 +44,7 @@ app.add_middleware(
 # Include routers
 app.include_router(admin.router)
 app.include_router(auth.router)
+app.include_router(change_log.router)
 app.include_router(persons.router)
 app.include_router(registrations.router)
 app.include_router(rsvp_replies.router)
