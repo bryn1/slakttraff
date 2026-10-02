@@ -112,6 +112,11 @@ function renderTree(persons) {
             persons.filter(p => p.generation === generation), generation);
         container.appendChild(row);
     });
+
+    // Connector lines (tree-lines.js) after layout settles for this frame.
+    if (typeof drawTreeLines === 'function') {
+        requestAnimationFrame(drawTreeLines);
+    }
 }
 
 function applyRsvpColour(personId, status) {
