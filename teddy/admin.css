@@ -1,0 +1,121 @@
+/* Admin page additions: toolbar, tables, chips. Tokens come from style.css. */
+.admin-counts {
+    margin: 8px 0 0;
+    font-weight: 600;
+    color: var(--cream);
+}
+
+.admin-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.admin-tabs {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.admin-tabs button {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
+    background: var(--cream);
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.admin-tabs button[aria-selected="true"] {
+    background: var(--warm-white);
+    color: var(--text-dark);
+    border-bottom-color: var(--warm-white);
+    font-weight: 600;
+}
+
+.admin-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.admin-status {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.admin-logout {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--warm-white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px var(--shadow);
+    font-size: 0.95rem;
+}
+
+.admin-table th,
+.admin-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text-dark);
+}
+
+.admin-table th {
+    background: var(--cream);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.admin-time {
+    white-space: nowrap;
+    color: var(--text-muted);
+}
+
+.chip {
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--cream);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.chip-green { color: var(--success); }
+.chip-red { color: var(--danger); }
+.chip-arrow { color: var(--text-muted); }
+
+.admin-empty,
+.admin-loading {
+    padding: 20px 4px;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+@media (max-width: 600px) {
+    .admin-table { display: block; overflow-x: auto; }
+}
