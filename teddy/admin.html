@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin – Släktträff 2026</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- Admin password gate: shown until POST /api/admin/auth returns a token -->
+    <div class="password-screen" id="password-screen">
+        <div class="password-box">
+            <h1>🛡️ Admin</h1>
+            <p class="password-lead">Släktträff 2026 – administrativ översikt.</p>
+            <form id="password-form">
+                <input type="password" id="password-input" name="password"
+                       placeholder="Adminlösenord" autocomplete="current-password" required>
+                <button type="submit" class="submit-btn">Logga in</button>
+                <p class="password-error" id="password-error" role="alert"></p>
+            </form>
+        </div>
+    </div>
+
+    <div id="admin-content" class="site-content" hidden>
+        <header>
+            <h1>🛡️ Admin – Släktträff 2026</h1>
+            <p class="admin-counts" id="admin-counts" aria-live="polite">&nbsp;</p>
+        </header>
+
+        <div class="container">
+            <div class="api-error" id="api-error" role="alert" hidden></div>
+
+            <div class="admin-toolbar">
+                <nav class="admin-tabs" role="tablist" aria-label="Vyer">
+                    <button type="button" role="tab" id="tab-log"
+                            aria-selected="true" aria-controls="view-log">Ändringslogg</button>
+                    <button type="button" role="tab" id="tab-replies"
+                            aria-selected="false" aria-controls="view-replies">Svarslista</button>
+                </nav>
+                <div class="admin-actions">
+                    <span class="admin-status" id="refresh-status" aria-live="polite"></span>
+                    <button type="button" id="refresh-btn" class="submit-btn">Uppdatera</button>
+                    <button type="button" id="logout-btn" class="admin-logout">Logga ut</button>
+                </div>
+            </div>
+
+            <!-- View: change log (tamper evidence), newest first exactly as the API orders -->
+            <section id="view-log" role="tabpanel" aria-labelledby="tab-log">
+                <table class="admin-table">
+                    <caption class="sr-only">Alla ändringar i annamesboxarna, nyaste först</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Tid</th>
+                            <th scope="col">Person</th>
+                            <th scope="col">Händelse</th>
+                            <th scope="col">Kontakt</th>
+                            <th scope="col">Noteringar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="log-body"></tbody>
+                </table>
+                <p class="admin-empty" id="log-empty" hidden>Inga ändringar ännu</p>
+                <p class="admin-loading" id="log-loading">Laddar…</p>
+            </section>
+
+            <!-- View: per-person answers with contact info and allergy/food notes -->
+            <section id="view-replies" role="tabpanel" aria-labelledby="tab-replies" hidden>
+                <table class="admin-table">
+                    <caption class="sr-only">Alla släktingar med svar, kontakt och noteringar</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Namn</th>
+                            <th scope="col">Generation</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">E-post</th>
+                            <th scope="col">Telefon</th>
+                            <th scope="col">Allergier / kostpreferenser</th>
+                        </tr>
+                    </thead>
+                    <tbody id="replies-body"></tbody>
+                </table>
+                <p class="admin-loading" id="replies-loading">Laddar…</p>
+            </section>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
