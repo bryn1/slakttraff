@@ -202,6 +202,60 @@ def test_concurrent_distinct_submits_chain(admin):
     assert len(_reply_rows(admin, pid)) == 1
 
 
+def test_concurrent_distinct_submits_after_seeded_state(admin):
+    """Seeded-state lock-boundary test (MC 3928 cycle 3, DA-c2 finding P2): seed
+    an accepted person, then race a byte-identical resubmit against a declined
+    submit. Pins the FULL _rsvp_lock boundary: with only the person query
+    hoisted above the lock (mutation M-B), the loser's load-time snapshot makes
+    its persons UPDATE a no-op (SQLAlchemy writes only attrs dirty vs the
+    snapshot) while the reply UPDATE and log row still commit — proven ~50% of
+    seeded races. 5 fresh-person races per run; every assertion below holds in
+    the shipped code for EVERY interleaving."""
+    payload_a = {"status": "accepted", "email": "anna@example.se",
+                 "phone": "070-111 22 33", "notes": "Tar med tårta"}
+    payload_d = dict(payload_a, status="declined")  # differs in status only
+
+    for race in range(5):
+        pid = _new_person(admin)
+        _rsvp(pid, **payload_a)                     # seed: exactly 1 row
+        assert len(_log_rows(admin, pid)) == 1
+        barrier = threading.Barrier(2)
+        errs = []
+
+        def submit(payload):
+            try:
+                barrier.wait(timeout=5)
+                r = client.post(f"/api/persons/{pid}/rsvp", json=payload,
+                                headers=AUTH)
+                assert r.status_code == 200, r.text
+            except Exception as e:  # noqa: BLE001 - surface to the main thread
+                errs.append(f"race{race} {type(e).__name__}: {e}")
+
+        threads = [threading.Thread(target=submit, args=(p,))
+                   for p in (payload_a, payload_d)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        assert not errs, errs
+
+        rows = sorted(_log_rows(admin, pid), key=lambda r: r["id"])  # old->new
+        assert 2 <= len(rows) <= 3, f"race{race}: {rows}"  # order-dependent
+        assert rows[0]["old_status"] == "pending"
+        for k in range(len(rows) - 1):
+            assert rows[k + 1]["old_status"] == rows[k]["new_status"]  # chain
+
+        replies = _reply_rows(admin, pid)
+        assert len(replies) == 1, f"race{race}: {replies}"
+        # Kill assertion: record == guest view == trail head, always.
+        person = client.get(f"/api/persons/{pid}", headers=AUTH).json()
+        assert person["rsvp_status"] == replies[0]["status"] \
+            == rows[-1]["new_status"], (
+            f"race{race}: person={person['rsvp_status']} "
+            f"reply={replies[0]['status']} trail="
+            f"{[(r['old_status'], r['new_status']) for r in rows]}")
+
+
 def test_change_log_skip_and_limit(admin):
     """skip/limit actually page the newest-first trail (P2: kill the
     offset-no-op and limit-no-op mutations M2/M3)."""
