@@ -1,5 +1,6 @@
 """Person CRUD + RSVP endpoints."""
 import secrets
+import threading
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -16,6 +17,13 @@ from app.schemas.person import PersonCreate, PersonResponse, PersonUpdate, RsvpS
 router = APIRouter(
     prefix="/api/persons", tags=["persons"], dependencies=[Depends(require_token)]
 )
+
+# Serializes submit_rsvp's read-diff-write-commit (a check-then-act sequence):
+# concurrent submits on one person would otherwise double-log and duplicate the
+# reply row (MC 3928 P1). The app is deployed single-process, so a process lock
+# is sufficient; a unique index on rsvp_replies.person_id cannot be retrofitted
+# onto existing DBs by Base.metadata.create_all (they may hold race-duplicates).
+_rsvp_lock = threading.Lock()
 
 
 @router.post("/", response_model=PersonResponse, status_code=status.HTTP_201_CREATED,
@@ -106,38 +114,40 @@ def submit_rsvp(person_id: int, rsvp: RsvpSubmit, db: Session = Depends(get_db))
     """Accept or decline the invitation, storing the submitted contact info.
 
     A real change (status or contact) is audit-logged in change_logs; an
-    identical resubmit adds no row (MC 3928).
+    identical resubmit adds no row (MC 3928). The whole read-diff-write is
+    done under _rsvp_lock so concurrent submits cannot race.
     """
-    db_person = db.query(Person).filter(Person.id == person_id).first()
-    if db_person is None:
-        raise HTTPException(status_code=404, detail="Person not found")
-    if rsvp.status == RsvpStatus.PENDING:
-        raise HTTPException(status_code=422, detail="RSVP must be accepted or declined")
+    with _rsvp_lock:
+        db_person = db.query(Person).filter(Person.id == person_id).first()
+        if db_person is None:
+            raise HTTPException(status_code=404, detail="Person not found")
+        if rsvp.status == RsvpStatus.PENDING:
+            raise HTTPException(status_code=422, detail="RSVP must be accepted or declined")
 
-    reply = db.query(RsvpReply).filter(RsvpReply.person_id == person_id).first()
-    old_status, status_changed, contact_changed = _rsvp_diff(db_person, reply, rsvp)
+        reply = db.query(RsvpReply).filter(RsvpReply.person_id == person_id).first()
+        old_status, status_changed, contact_changed = _rsvp_diff(db_person, reply, rsvp)
 
-    db_person.rsvp_status = rsvp.status.value
-    # Upsert: one reply row per person — a repeat submit updates the existing
-    # row instead of accumulating duplicates.
-    if reply is None:
-        reply = RsvpReply(person_id=person_id)
-        db.add(reply)
-    reply.status = rsvp.status.value
-    reply.email = rsvp.email
-    reply.phone = rsvp.phone
-    reply.notes = rsvp.notes
-    if status_changed or contact_changed:
-        db.add(ChangeLog(
-            person_id=person_id,
-            person_name=db_person.name,
-            action="status" if status_changed else "contact",
-            old_status=old_status,
-            new_status=rsvp.status.value,
-            email=reply.email,   # contact snapshot as stored AFTER applying
-            phone=reply.phone,
-            notes=reply.notes,
-        ))
-    db.commit()
+        db_person.rsvp_status = rsvp.status.value
+        # Upsert: one reply row per person — a repeat submit updates the existing
+        # row instead of accumulating duplicates.
+        if reply is None:
+            reply = RsvpReply(person_id=person_id)
+            db.add(reply)
+        reply.status = rsvp.status.value
+        reply.email = rsvp.email
+        reply.phone = rsvp.phone
+        reply.notes = rsvp.notes
+        if status_changed or contact_changed:
+            db.add(ChangeLog(
+                person_id=person_id,
+                person_name=db_person.name,
+                action="status" if status_changed else "contact",
+                old_status=old_status,
+                new_status=rsvp.status.value,
+                email=reply.email,   # contact snapshot as stored AFTER applying
+                phone=reply.phone,
+                notes=reply.notes,
+            ))
+        db.commit()
     db.refresh(db_person)
     return db_person

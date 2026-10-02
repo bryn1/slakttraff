@@ -1,6 +1,7 @@
 """Change-log contract tests (RSVP audit trail, MC 3928)."""
 import os
 import tempfile
+import threading
 
 # Isolate the test DB before app import (same pattern as tests/test_api.py).
 _TMPDIR = tempfile.mkdtemp(prefix="slakttraff-test-changelog-")
@@ -132,6 +133,93 @@ def test_change_log_requires_admin_token(admin):
     assert client.get("/api/admin/change-log").status_code == 401
     assert client.get("/api/admin/change-log", headers=AUTH).status_code == 401
     assert client.get("/api/admin/change-log", headers=admin).status_code == 200
+
+
+def _reply_rows(admin, pid):
+    """This person's rsvp_replies rows via the admin view (shape: app/routers/
+    rsvp_replies.py -> RsvpReplyResponse, filtered on person_id)."""
+    return [x for x in client.get("/api/rsvp-replies/", headers=admin).json()
+            if x["person_id"] == pid]
+
+
+def test_concurrent_identical_submits_log_one_row(admin):
+    """Two byte-identical submits released together -> exactly ONE change-log
+    row AND exactly ONE reply row (P1: the double-log / duplicate-reply race)."""
+    pid = _new_person(admin)
+    payload = {"status": "accepted", "email": "anna@example.se",
+               "phone": "070-111 22 33", "notes": "Tar med tårta"}
+    barrier = threading.Barrier(2)
+    errs = []
+
+    def submit():
+        try:
+            barrier.wait(timeout=5)
+            r = client.post(f"/api/persons/{pid}/rsvp", json=payload, headers=AUTH)
+            assert r.status_code == 200, r.text
+        except Exception as e:  # noqa: BLE001 - surface to the main thread
+            errs.append(f"{type(e).__name__}: {e}")
+
+    threads = [threading.Thread(target=submit) for _ in range(2)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert not errs, errs
+    assert len(_log_rows(admin, pid)) == 1
+    assert len(_reply_rows(admin, pid)) == 1
+
+
+def test_concurrent_distinct_submits_chain(admin):
+    """accepted + declined submitted concurrently -> exactly TWO chained rows
+    (no phantom transition) and ONE reply row (P1)."""
+    pid = _new_person(admin)
+    barrier = threading.Barrier(2)
+    errs = []
+
+    def submit(status):
+        try:
+            barrier.wait(timeout=5)
+            r = client.post(f"/api/persons/{pid}/rsvp",
+                            json={"status": status, "email": "anna@example.se"},
+                            headers=AUTH)
+            assert r.status_code == 200, r.text
+        except Exception as e:  # noqa: BLE001 - surface to the main thread
+            errs.append(f"{type(e).__name__}: {e}")
+
+    threads = [threading.Thread(target=submit, args=(s,))
+               for s in ("accepted", "declined")]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert not errs, errs
+
+    rows = sorted(_log_rows(admin, pid), key=lambda r: r["id"])  # old->new order
+    assert len(rows) == 2
+    assert rows[0]["old_status"] == "pending"
+    assert rows[1]["old_status"] == rows[0]["new_status"]  # valid chain
+    assert {rows[0]["new_status"], rows[1]["new_status"]} == {"accepted", "declined"}
+    assert len(_reply_rows(admin, pid)) == 1
+
+
+def test_change_log_skip_and_limit(admin):
+    """skip/limit actually page the newest-first trail (P2: kill the
+    offset-no-op and limit-no-op mutations M2/M3)."""
+    pid = _new_person(admin, name="Page Testsson")
+    _rsvp(pid)                              # row A (oldest)
+    _rsvp(pid, email="p2@example.se")       # row B
+    _rsvp(pid, email="p3@example.se")       # row C (newest)
+    ids = [x["id"] for x in _log_rows(admin, pid)]  # newest first
+    assert len(ids) == 3
+    newest, middle, oldest = ids
+
+    assert [x["id"] for x in client.get(
+        "/api/admin/change-log?limit=1", headers=admin).json()] == [newest]
+    page = client.get("/api/admin/change-log?skip=1", headers=admin).json()
+    assert middle in [x["id"] for x in page] and oldest in [x["id"] for x in page]
+    assert newest not in [x["id"] for x in page]
+    assert [x["id"] for x in client.get(
+        "/api/admin/change-log?skip=1&limit=1", headers=admin).json()] == [middle]
 
 
 def test_change_log_newest_first(admin):

@@ -38,7 +38,8 @@ app/
                            info submitted with an RSVP; admin-visible only
   models/change_log.py    ChangeLog (person_id FK, person_name snapshot, action
                           "status"|"contact", old/new_status, contact snapshot AFTER
-                          the change, created_at) — audit trail of RSVP changes (MC 3928)
+                          the change, created_at) — audit trail of RSVP changes (MC 3928); rows are RETAINED on person delete /
+                           admin re-import (the person_name snapshot keeps them readable)
   schemas/enums.py        Generation, GroupSize, RsvpStatus
   schemas/person.py       PersonBase/Create/Update/Person/PersonResponse,
                           RsvpSubmit (status + email + phone? + notes?), RsvpReplyResponse, ChangeLogResponse
@@ -59,7 +60,8 @@ app/
                           POST/PUT/DELETE persons (admin token). RSVP is an UPSERT:
                           one RsvpReply row per person, repeat submits update it; a
                           real change (status or contact) adds ONE change_logs row
-                          (an identical resubmit logs nothing)
+                          (an identical resubmit logs nothing). Concurrent submits
+                          are serialized by a process-wide lock (single-process app).
   routers/registrations.py POST /api/registrations/ (site token, the public signup form);
                           each signup also creates a linked Person tree spot (role
                           "Anmäld", rsvp pending, lowest selected generation) in the
