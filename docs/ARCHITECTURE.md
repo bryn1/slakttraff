@@ -70,6 +70,14 @@ teddy/
   api.js              API client (login, fetchPersons, submitRsvp, submitRegistration);
                       sends Bearer token, on 401 clears token + returns to password screen
   tree.js             tree rendering from API data + RSVP colour application
+                      + connector redraw hook (drawTreeLines)
+  tree-lines.js       classical family-tree connector lines (MC 3929): one
+                      overlay SVG in #family-tree, one elbow path (stub/bus/
+                      drop) per rendered parent→child link (parents[0]),
+                      coords relative to the tree container, redrawn on
+                      render, resize (150 ms debounce) and fonts.ready;
+                      pointer-events:none, aria-hidden, below the cards;
+                      no data logic, no click handling
   app.js              page wiring: password gate, init/load, person modal + RSVP +
                       contact fields, form submit
 tests/test_api.py    pytest contract tests (TestClient, isolated temp DB)

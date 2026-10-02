@@ -203,6 +203,24 @@
     background: transparent;
 }
 
+/* Classical family-tree connector lines (MC 3929): one overlay SVG inside
+   #family-tree, one elbow path per parent→child link. Sits under the cards
+   (z-index 2) and never intercepts clicks. */
+.tree-lines-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.tree-line {
+    stroke: var(--line-color);
+    stroke-width: 2;
+    fill: none;
+    opacity: 0.7;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .person-card {
