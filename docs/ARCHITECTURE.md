@@ -87,6 +87,27 @@ teddy/
                       no data logic, no click handling
   app.js              page wiring: password gate, init/load, person modal + RSVP +
                       contact fields, form submit
+  admin.html          admin page (MC 3930): admin password gate + two tabs —
+                      "Ändringslogg" (RSVP change-log audit table, newest first,
+                      humanised Swedish status words with green/red colour hint)
+                      and "Svarslista" (all persons: name, generation, status
+                      chip, e-post, telefon, allergier/kostpreferenser joined
+                      from rsvp-replies by person_id, "—" when none); read-only;
+                      counts row "X kommer · Y hoppat av · Z ej svarat";
+                      honest empty/loading/error states
+  admin.js            admin logic: POST api/admin/auth gate — admin token in
+                      sessionStorage key slakttraff_admin_token ONLY (never the
+                      password, never the URL); any 401 clears the token and
+                      returns to the gate; change-log/persons/rsvp-replies
+                      fetched relative (mount-prefix safe), rendered via
+                      textContent only (no innerHTML: free-text names and notes
+                      cannot inject markup); 30 s auto-refresh + Uppdatera;
+                      naive-UTC created_at treated as UTC before sv-SE display
+  admin.css           admin-only styling: tabs, table, chips, sr-only; forces
+                      [hidden] over style.css's .password-screen display:flex
+                      (that rule beats the UA [hidden] and would leave the gate
+                      painted over the content after login); colour tokens are
+                      style.css's, nothing invented
 tests/test_api.py    pytest contract tests (TestClient, isolated temp DB)
 tests/test_admin_import.py  admin family-import + startup-migration contract tests
 tests/test_change_log.py  RSVP change-log contract tests (audit rows, auth, ordering)
