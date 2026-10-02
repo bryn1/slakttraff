@@ -36,9 +36,12 @@ app/
                            family-tree spot)
   models/rsvp_reply.py    RsvpReply (person_id FK, status, email, phone, notes) — contact
                            info submitted with an RSVP; admin-visible only
+  models/change_log.py    ChangeLog (person_id FK, person_name snapshot, action
+                          "status"|"contact", old/new_status, contact snapshot AFTER
+                          the change, created_at) — audit trail of RSVP changes (MC 3928)
   schemas/enums.py        Generation, GroupSize, RsvpStatus
   schemas/person.py       PersonBase/Create/Update/Person/PersonResponse,
-                          RsvpSubmit (status + email + phone? + notes?), RsvpReplyResponse
+                          RsvpSubmit (status + email + phone? + notes?), RsvpReplyResponse, ChangeLogResponse
   schemas/registration.py RegistrationBase/Create/Update/Registration/RegistrationResponse
   routers/admin.py        POST /api/admin/import-family (admin token): replace-all import
                           of a family.json-style entry list — deletes existing persons
@@ -54,13 +57,17 @@ app/
                           POST /api/admin/auth -> admin token (403 on wrong password)
   routers/persons.py      GET persons + POST /api/persons/{id}/rsvp (site token);
                           POST/PUT/DELETE persons (admin token). RSVP is an UPSERT:
-                          one RsvpReply row per person, repeat submits update it
+                          one RsvpReply row per person, repeat submits update it; a
+                          real change (status or contact) adds ONE change_logs row
+                          (an identical resubmit logs nothing)
   routers/registrations.py POST /api/registrations/ (site token, the public signup form);
                           each signup also creates a linked Person tree spot (role
                           "Anmäld", rsvp pending, lowest selected generation) in the
                           same transaction and stores its id in registrations.person_id.
                           GET/PUT/DELETE (admin token — registrations carry contact info)
   routers/rsvp_replies.py  GET /api/rsvp-replies (admin token only; the contact-info view)
+  routers/change_log.py   GET /api/admin/change-log (admin token only): the RSVP
+                          audit trail, newest first, skip/limit paging
 teddy/
   index.html          markup (password screen, header, tree container, form, person modal
                       with contact fields)
@@ -74,6 +81,7 @@ teddy/
                       contact fields, form submit
 tests/test_api.py    pytest contract tests (TestClient, isolated temp DB)
 tests/test_admin_import.py  admin family-import + startup-migration contract tests
+tests/test_change_log.py  RSVP change-log contract tests (audit rows, auth, ordering)
                      (split from test_api.py for file hygiene; same pattern)
 data/
   family.json           real family data (GITIGNORED — personal data, never commit)
