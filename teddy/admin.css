@@ -1,4 +1,7 @@
 /* Admin page additions: toolbar, tables, chips. Tokens come from style.css. */
+/* style.css's .password-screen sets display:flex, which beats the UA [hidden]
+   rule; force hidden to mean hidden on this page. */
+[hidden] { display: none !important; }
 .admin-counts {
     margin: 8px 0 0;
     font-weight: 600;
