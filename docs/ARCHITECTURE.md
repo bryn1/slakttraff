@@ -114,9 +114,13 @@ tests/test_api.py    pytest contract tests (TestClient, isolated temp DB)
 tests/test_admin_import.py  admin family-import + startup-migration contract tests
 tests/test_change_log.py  RSVP change-log contract tests (audit rows, auth, ordering)
                      (split from test_api.py for file hygiene; same pattern)
+artemis/
+  48.6-http-request-verification-20260812.txt
+                      HTTP-request verification artifact (dispatch, not product code)
 data/
-  family.json           real family data (GITIGNORED — personal data, never commit)
-  family.json.example   placeholder shape ("Person 1"...) committed for fresh clones
+  .gitkeep            keeps data/ tracked (family.json itself is gitignored)
+  family.json         real family data (GITIGNORED — personal data, never commit)
+  family.json.example placeholder shape ("Person 1"...) committed for fresh clones
 ```
 
 ## Entrypoint
@@ -169,17 +173,19 @@ POST /api/persons/{id}/rsvp takes `{"status": "accepted"|"declined", "email": ..
 missing/invalid email → 422; unknown person → 404. Each reply is stored as an
 RsvpReply row — one row per person (upsert: a repeat submit updates the
 existing row). Contact info is exposed ONLY via GET /api/rsvp-replies, which
-requires an ADMIN token (404 when ADMIN_PASSWORD is unset, 401 with a mere site
-token). Spot colours: green = accepted, red = declined, original = pending.
+requires an ADMIN token (401 without a valid admin token). Spot colours:
+green = accepted, red = declined, original = pending.
 
 ## Known accepted risks (owner decisions 2026-09-26)
 
 - Session tokens are in-memory: a server restart logs everyone out (acceptable for
   this event site; revisit if persistence is wanted).
 - The default site password is public in this repo (owner-accepted, shared with
-  invitees); set `SITE_PASSWORD` in the host environment to override it, and set
-  `ADMIN_PASSWORD` to enable the admin view (contact info + person editing).
+  invitees); set `SITE_PASSWORD` in the host environment to override it.
+  `ADMIN_PASSWORD` overrides the built-in default admin password; the admin
+  view (contact info + person editing) is always enabled.
 - RSVP and the registration form both record attendance in separate tables
   (RsvpReply vs Registration) and are not reconciled: RSVP = per-spot answer for
   invited family, registration = general sign-up.
-- `teddy/48.*` files are dispatch artifacts, not product code.
+- `artemis/48.6-http-request-verification-20260812.txt` is a dispatch artifact,
+  not product code.
