@@ -182,4 +182,5 @@ Spot colours: green = accepted, red = declined, original = pending.
 - RSVP and the registration form both record attendance in separate tables
   (RsvpReply vs Registration) and are not reconciled: RSVP = per-spot answer for
   invited family, registration = general sign-up.
-- `teddy/48.*` files are dispatch artifacts, not product code.
+- `artemis/48.6-*.txt` (verification transcript) and `.audits/<run>/` directories are
+  dispatch/evidence artifacts, not product code.
