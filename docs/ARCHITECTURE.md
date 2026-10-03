@@ -173,19 +173,20 @@ POST /api/persons/{id}/rsvp takes `{"status": "accepted"|"declined", "email": ..
 missing/invalid email → 422; unknown person → 404. Each reply is stored as an
 RsvpReply row — one row per person (upsert: a repeat submit updates the
 existing row). Contact info is exposed ONLY via GET /api/rsvp-replies, which
-requires an ADMIN token (401 without a valid admin token). Spot colours:
-green = accepted, red = declined, original = pending.
+requires an ADMIN token (401 with a mere site token; the admin surface always
+exists — `ADMIN_PASSWORD` only overrides the owner-approved default, a921b50).
+Spot colours: green = accepted, red = declined, original = pending.
 
 ## Known accepted risks (owner decisions 2026-09-26)
 
 - Session tokens are in-memory: a server restart logs everyone out (acceptable for
   this event site; revisit if persistence is wanted).
 - The default site password is public in this repo (owner-accepted, shared with
-  invitees); set `SITE_PASSWORD` in the host environment to override it.
-  `ADMIN_PASSWORD` overrides the built-in default admin password; the admin
-  view (contact info + person editing) is always enabled.
+  invitees); set `SITE_PASSWORD` in the host environment to override it. The admin
+  view (contact info + person editing) is always enabled; `ADMIN_PASSWORD` only
+  overrides its owner-approved default (a921b50).
 - RSVP and the registration form both record attendance in separate tables
   (RsvpReply vs Registration) and are not reconciled: RSVP = per-spot answer for
   invited family, registration = general sign-up.
-- `artemis/48.6-http-request-verification-20260812.txt` is a dispatch artifact,
-  not product code.
+- `artemis/48.6-*.txt` (verification transcript) and `.audits/<run>/` directories are
+  dispatch/evidence artifacts, not product code.
