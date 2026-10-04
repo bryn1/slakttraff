@@ -1,6 +1,6 @@
 # BUILD — slakttraff hosting + password gate (2026-09-26)
 
-Author: svarkor-ai (slakttraff build) <svarkor-ai@users.noreply.github.com>
+Author: bryn1 (slakttraff build) <bryn1@users.noreply.github.com>
 Card: slakttraff public hosting + shared site password (owner decisions 2026-09-26)
 
 ## What changed
