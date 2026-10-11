@@ -1,98 +1,153 @@
-/* Släktträff 2026 — family tree: generation rows, person spots, connectors,
-   and the RSVP colour states (green = accepted, red = declined). */
+/* Släktträff 2026 — family tree presentation: generation bands (founders on top),
+   clean white name cards with a per-generation accent border, the generation
+   colour legend, and the RSVP states (green ring + ✓ = kommer, red ring + ✗ =
+   kommer inte, no ring = ej svarat — pinned owner ruling 2026-09-25).
+   Connector lines are drawn by tree-lines.js; their styles are at the bottom. */
 
-/* Family Tree */
 .family-tree {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 0;
     position: relative;
+    padding: 1rem 0 0.5rem;
 }
 
-.generation-row {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    margin-bottom: 0;
-    position: relative;
+/* Band gap: the connector bus lines run here */
+.generation-row + .generation-row {
+    margin-top: 3rem;
 }
 
 .generation-label {
-    width: 100%;
-    text-align: center;
-    font-weight: bold;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 0.5rem;
+    display: table;
+    margin: 0 auto 0.9rem;
+    padding: 0.25rem 0.8rem 0.25rem 0.65rem;
+    border-left: 4px solid var(--line-neutral);
+    border-radius: var(--radius-control);
     background: var(--warm-white);
-    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 650;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-primary);
 }
+
+.generation-row.gen-1 .generation-label { border-left-color: var(--gen-1); background: var(--gen-1-soft); }
+.generation-row.gen-2 .generation-label { border-left-color: var(--gen-2); background: var(--gen-2-soft); }
+.generation-row.gen-3 .generation-label { border-left-color: var(--gen-3); background: var(--gen-3-soft); }
+.generation-row.gen-4 .generation-label { border-left-color: var(--gen-4); background: var(--gen-4-soft); }
+.generation-row.gen-5 .generation-label { border-left-color: var(--gen-5); background: var(--gen-5-soft); }
 
 .generation-people {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 2rem;
-    width: 100%;
-    padding: 1rem;
-    position: relative;
+    align-items: flex-start;
+    gap: 1.25rem;
+}
+
+/* Siblings share this box (tighter gap than between groups); it is invisible
+   on purpose — the connector lines name the parent. */
+.sibling-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 0.6rem;
 }
 
 .person-card {
-    background: linear-gradient(145deg, var(--warm-white) 0%, var(--cream) 100%);
-    border: 2px solid var(--border);
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    min-width: 140px;
-    max-width: 180px;
+    background: var(--surface);
+    border: 1px solid var(--line-neutral);
+    border-top-width: 3px;
+    border-bottom-width: 3px;
+    border-radius: 10px;
+    padding: 0.65rem 0.8rem;
+    min-width: 150px;
+    max-width: 190px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.3s ease;
     position: relative;
     z-index: 2;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    overflow-wrap: break-word;
 }
+
+/* Clean name cards only: no photos, no monograms — the border carries the
+   generation color (exact hues + AA ratios in the style.css tokens table). */
+.person-card.gen-1 { border-color: var(--gen-1); }
+.person-card.gen-2 { border-color: var(--gen-2); }
+.person-card.gen-3 { border-color: var(--gen-3); }
+.person-card.gen-4 { border-color: var(--gen-4); }
+.person-card.gen-5 { border-color: var(--gen-5); }
 
 .person-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px var(--shadow);
-    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
 }
 
-.person-card.generation-1 {
-    background: linear-gradient(145deg, var(--primary) 0%, var(--primary-light) 100%);
-    color: white;
-    border-color: var(--accent);
-}
-
-.person-card.generation-1:hover {
-    background: linear-gradient(145deg, var(--primary-light) 0%, var(--primary) 100%);
+.person-card:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
 }
 
 .person-name {
-    font-weight: bold;
-    font-size: 1rem;
-    margin-bottom: 0.25rem;
+    font-weight: 650;
+    font-size: 0.98rem;
+    line-height: 1.25;
+    color: var(--text-primary);
 }
 
-.person-role {
-    font-size: 0.8rem;
-    opacity: 0.8;
+.person-birth {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-top: 0.1rem;
 }
 
-.person-card.generation-1 .person-role {
-    opacity: 0.9;
+.person-relation {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+    margin-top: 0.15rem;
 }
 
-/* RSVP colour states. Green = accepted, red = declined,
-   original colours = unanswered (pending). */
+/* Colour legend for the five generations, near the top of the tree */
+.tree-legend {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem 0.75rem;
+    margin: 0 0 1.5rem;
+}
+
+.tree-legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    padding: 0.3rem 0.8rem 0.3rem 0.6rem;
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+
+.tree-legend .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.tree-legend li.gen-1 .legend-swatch { background: var(--gen-1); }
+.tree-legend li.gen-2 .legend-swatch { background: var(--gen-2); }
+.tree-legend li.gen-3 .legend-swatch { background: var(--gen-3); }
+.tree-legend li.gen-4 .legend-swatch { background: var(--gen-4); }
+.tree-legend li.gen-5 .legend-swatch { background: var(--gen-5); }
+
+/* RSVP states. Ring + tint + ✓/✗ glyph: the state never relies on hue alone,
+   and the ring sits outside the generation border so both stay readable. */
 .person-card.rsvp-accepted {
-    border-color: var(--success);
-    box-shadow: 0 0 0 3px rgba(34, 139, 34, 0.35);
+    background: #f1f8f2;
+    box-shadow: 0 0 0 3px rgba(14, 129, 39, 0.35);
 }
 
 .person-card.rsvp-accepted .person-name::after {
@@ -100,13 +155,9 @@
     color: var(--success);
 }
 
-.person-card.generation-1.rsvp-accepted .person-name::after {
-    color: #b6f0b6;
-}
-
 .person-card.rsvp-declined {
-    border-color: var(--danger);
-    box-shadow: 0 0 0 3px rgba(178, 34, 34, 0.35);
+    background: #fcf2f1;
+    box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.35);
 }
 
 .person-card.rsvp-declined .person-name::after {
@@ -114,98 +165,7 @@
     color: var(--danger);
 }
 
-.person-card.generation-1.rsvp-declined .person-name::after {
-    color: #f5b5b5;
-}
-
-/* Family Group - visar grenar med linjer */
-.family-group {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 1rem 0;
-    padding: 1rem;
-    background: rgba(139, 69, 19, 0.03);
-    border-radius: 12px;
-    border: 1px dashed var(--border);
-    position: relative;
-}
-
-.family-group-header {
-    font-weight: bold;
-    color: var(--primary);
-    margin-bottom: 1.5rem;
-    font-size: 1rem;
-    position: relative;
-}
-
-.family-group-children {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 1rem;
-    position: relative;
-}
-
-/* Sub-family groups */
-.sub-family {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 0.5rem;
-    padding: 0.75rem;
-    background: rgba(210, 105, 30, 0.05);
-    border-radius: 8px;
-    border: 1px solid rgba(139, 69, 19, 0.2);
-}
-
-.sub-family-header {
-    font-weight: bold;
-    color: var(--primary-dark);
-    font-size: 0.9rem;
-    margin-bottom: 0.75rem;
-}
-
-.sub-family-children {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem;
-}
-
-/* SVG Connector Lines */
-.connector-svg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1;
-}
-
-.connection-line {
-    stroke: var(--line-color);
-    stroke-width: 2;
-    fill: none;
-    stroke-dasharray: 5, 5;
-}
-
-.connection-line.vertical {
-    stroke-dasharray: 3, 3;
-}
-
-.generation-connector {
-    width: 100%;
-    height: 60px;
-    position: relative;
-    margin: 0;
-    background: transparent;
-}
-
-/* Classical family-tree connector lines (MC 3929): one overlay SVG inside
-   #family-tree, one elbow path per parent→child link. Sits under the cards
-   (z-index 2) and never intercepts clicks. */
+/* SVG connector overlay drawn by tree-lines.js (one elbow per parent→child) */
 .tree-lines-overlay {
     position: absolute;
     top: 0;
@@ -215,40 +175,49 @@
 }
 
 .tree-line {
-    stroke: var(--line-color);
+    stroke: var(--line-neutral);
     stroke-width: 2;
     fill: none;
-    opacity: 0.7;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* Mobile: bands stack, cards go half-width; connector stems simplify (tree-lines.js) */
+@media (max-width: 640px) {
+    .family-tree {
+        padding-top: 0.5rem;
+    }
+
+    .generation-row + .generation-row {
+        margin-top: 2.25rem;
+    }
+
+    .generation-people {
+        gap: 0.75rem;
+    }
+
+    .sibling-group {
+        gap: 0.5rem;
+    }
+
     .person-card {
-        min-width: 120px;
-        padding: 0.75rem 1rem;
+        flex: 1 1 calc(50% - 0.5rem);
+        min-width: 0;
+        max-width: calc(50% - 0.5rem);
+        padding: 0.5rem 0.6rem;
+        border-top-width: 2px;
+        border-bottom-width: 2px;
     }
 
     .person-name {
-        font-size: 0.9rem;
+        font-size: 0.88rem;
     }
 
-    .family-group {
-        padding: 0.5rem;
+    .person-birth,
+    .person-relation {
+        font-size: 0.72rem;
     }
 
-    .generation-people {
-        gap: 1rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .person-card {
-        min-width: 100px;
-        padding: 0.5rem 0.75rem;
-        font-size: 0.85rem;
-    }
-
-    .generation-people {
-        gap: 0.5rem;
+    .tree-legend li {
+        font-size: 0.74rem;
+        padding: 0.25rem 0.6rem 0.25rem 0.45rem;
     }
 }

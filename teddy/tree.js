@@ -1,5 +1,7 @@
-/* Släktträff 2026 — tree rendering. Builds the generation rows from API
-   persons and applies the RSVP colour states to each spot. */
+/* Släktträff 2026 — tree rendering: generation bands (founders on top), invisible
+   sibling groups under the parent, clean name cards (name, "f. ÅÅÅÅ" when the
+   person has a birth year, Swedish relation line) and the per-card RSVP state.
+   Presentation lives in tree.css; connector geometry in tree-lines.js. */
 'use strict';
 
 const GENERATION_LABELS = {
@@ -10,51 +12,46 @@ const GENERATION_LABELS = {
     5: 'Generation 5 - Barnbarnsbarnsbarn',
 };
 
+/* Appended to the card's aria-label so screen readers state the RSVP answer */
+const RSVP_ARIA_SUFFIXES = {
+    accepted: ' — har svarat: kommer',
+    declined: ' — har svarat: kommer inte',
+};
+
 function personCard(person) {
     const card = document.createElement('div');
-    card.className = 'person-card' + (person.generation === 1 ? ' generation-1' : '');
+    card.className = 'person-card gen-' + person.generation;
     card.dataset.personId = person.id;
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', person.name + ', ' + person.role);
+    card.dataset.ariaBase = person.name + ', ' + person.role;
+    card.setAttribute('aria-label', card.dataset.ariaBase);
 
     const name = document.createElement('div');
     name.className = 'person-name';
     name.textContent = person.name;
-    const role = document.createElement('div');
-    role.className = 'person-role';
-    role.textContent = person.relation || person.role;
-
     card.appendChild(name);
-    card.appendChild(role);
+
+    if (person.birth_year) {
+        const birth = document.createElement('div');
+        birth.className = 'person-birth';
+        birth.textContent = 'f. ' + person.birth_year;
+        card.appendChild(birth);
+    }
+
+    const relation = document.createElement('div');
+    relation.className = 'person-relation';
+    relation.textContent = person.relation || person.role;
+    card.appendChild(relation);
     return card;
 }
 
-function groupFor(person, byParent, groupClass, headerClass, childrenClass) {
-    const parentId = person.parents && person.parents.length ? person.parents[0] : null;
-    if (parentId === null) {
-        return null;
-    }
-    let group = byParent.get(parentId);
-    if (!group) {
-        group = document.createElement('div');
-        group.className = groupClass;
-        const header = document.createElement('div');
-        header.className = headerClass;
-        group.appendChild(header);
-        const children = document.createElement('div');
-        children.className = childrenClass;
-        group.appendChild(children);
-        group._header = header;
-        group._children = children;
-        byParent.set(parentId, group);
-    }
-    return group;
-}
-
+/* One band per generation: label + cards. Children of the same parent share an
+   invisible .sibling-group box (tight gap) so siblings sit together under the
+   parent; the connector lines carry the parent→child reading. */
 function renderGeneration(persons, generation) {
     const row = document.createElement('div');
-    row.className = 'generation-row';
+    row.className = 'generation-row gen-' + generation;
 
     const label = document.createElement('div');
     label.className = 'generation-label';
@@ -63,57 +60,44 @@ function renderGeneration(persons, generation) {
 
     const people = document.createElement('div');
     people.className = 'generation-people';
+
     const byParent = new Map();
     const loose = [];
 
     persons.forEach(person => {
-        if (generation === 1) {
-            people.appendChild(personCard(person));
+        const parentId = person.parents && person.parents.length ? person.parents[0] : null;
+        if (parentId === null || generation === 1) {
+            loose.push(person);
             return;
         }
-        const group = groupFor(person, byParent, 'family-group', 'family-group-header', 'family-group-children');
-        if (group) {
-            group._children.appendChild(personCard(person));
-        } else {
-            loose.push(person);
+        let group = byParent.get(parentId);
+        if (!group) {
+            group = document.createElement('div');
+            group.className = 'sibling-group';
+            byParent.set(parentId, group);
+            people.appendChild(group);
         }
+        group.appendChild(personCard(person));
     });
 
-    // Parent headers: "Namn → N barn"
-    byParent.forEach((group, parentId) => {
-        const parent = window.__personsById[parentId];
-        group._header.textContent = (parent ? parent.name : 'Okänd') + ' → ' +
-            group._children.children.length + ' barn';
-        people.appendChild(group);
-    });
     loose.forEach(person => people.appendChild(personCard(person)));
 
     row.appendChild(people);
     return row;
 }
 
+/* Generation 1 (the founders) renders first: founders on top, generations 2-5
+   as bands below. Connector lines are drawn once after layout settles. */
 function renderTree(persons) {
     const container = document.getElementById('family-tree');
     container.innerHTML = '';
     const generations = [...new Set(persons.map(p => p.generation))].sort((a, b) => a - b);
 
-    generations.forEach((generation, index) => {
-        if (index > 0) {
-            const connector = document.createElement('div');
-            connector.className = 'generation-connector';
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('class', 'connector-svg');
-            svg.setAttribute('viewBox', '0 0 1400 60');
-            svg.setAttribute('preserveAspectRatio', 'none');
-            connector.appendChild(svg);
-            container.appendChild(connector);
-        }
-        const row = renderGeneration(
-            persons.filter(p => p.generation === generation), generation);
-        container.appendChild(row);
+    generations.forEach(generation => {
+        container.appendChild(renderGeneration(
+            persons.filter(p => p.generation === generation), generation));
     });
 
-    // Connector lines (tree-lines.js) after layout settles for this frame.
     if (typeof drawTreeLines === 'function') {
         requestAnimationFrame(drawTreeLines);
     }
@@ -130,6 +114,8 @@ function applyRsvpColour(personId, status) {
     } else if (status === 'declined') {
         card.classList.add('rsvp-declined');
     }
+    card.setAttribute('aria-label',
+        card.dataset.ariaBase + (RSVP_ARIA_SUFFIXES[status] || ''));
 }
 
 function applyAllRsvpColours(persons) {
