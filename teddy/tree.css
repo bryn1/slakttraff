@@ -198,8 +198,12 @@
         gap: 0.75rem;
     }
 
+    /* Mobile: flatten the grouping boxes so every card is a direct half-width
+       cell of the band grid. A shrink-to-fit group box would otherwise let the
+       cards' percentage flex-basis resolve against min-content and collapse
+       single-child groups into slivers. */
     .sibling-group {
-        gap: 0.5rem;
+        display: contents;
     }
 
     .person-card {
