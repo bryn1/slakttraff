@@ -28,8 +28,16 @@ function rsvpStatusText(status) {
     return 'Inget svar ännu — klicka på en knapp nedan.';
 }
 
+/* Accent bar on the popup mirrors the person's generation color (modal.css) */
+function setModalAccent(generation) {
+    const box = modal.querySelector('.modal-content');
+    box.classList.remove('gen-1', 'gen-2', 'gen-3', 'gen-4', 'gen-5');
+    box.classList.add('gen-' + generation);
+}
+
 function openPersonModal(person) {
     currentPersonId = person.id;
+    setModalAccent(person.generation);
     document.getElementById('modal-name').textContent = person.name;
     document.getElementById('modal-generation').textContent = 'Generation ' + person.generation;
     document.getElementById('modal-role').textContent = person.role;
