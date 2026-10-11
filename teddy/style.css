@@ -53,13 +53,8 @@
     --success: #0e8127;   /* [admin] */
     --danger: #b91c1c;    /* [admin] */
 
-    /* Legacy token names kept for admin.css / modal.css / forms.css
-       consumers; --primary/--accent/--primary-dark/--primary-light are
-       removed together with their last consumer in this redesign. */
-    --primary: #15803d;        /* transitional: modal h3 until restyle */
-    --primary-dark: #14532d;   /* transitional: modal labels */
-    --primary-light: #166534;  /* transitional: old gen-1 card fill */
-    --accent: #15803d;         /* transitional: focus accent */
+    /* Legacy token names kept for admin.css (back-office, untouched this
+       round): it consumes these as its surface contract. */
     --cream: #f3f4f7;          /* [admin] */
     --warm-white: #f9fafb;     /* [admin] */
     --text-dark: #16171a;      /* [admin] */
