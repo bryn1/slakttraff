@@ -1,8 +1,9 @@
-/* Släktträff 2026 — family-tree connector lines (MC 3929). Draws classical
-   orthogonal elbows from each parent card to its children as ONE overlay
-   SVG inside #family-tree. Geometry only: no data fetching, no click
-   handling. Redrawn by tree.js after each renderTree, on resize and when
-   fonts settle. */
+/* Släktträff 2026 — family-tree connector lines (MC 3929). Draws thin neutral
+   orthogonal elbows from each parent card to its children as ONE overlay SVG
+   inside #family-tree, with a small dot at every junction; at <=640px the
+   elbows simplify to a vertical stem + dot above each child. Geometry only:
+   no data fetching, no click handling. Redrawn by tree.js after each
+   renderTree, on resize and when fonts settle. */
 'use strict';
 
 const TREE_LINE_RESIZE_DEBOUNCE_MS = 150;
@@ -47,8 +48,40 @@ function makeTreeLinePath(parent, child) {
         ' V ' + child.top.toFixed(1);
 }
 
-/* One <path class="tree-line" d="... V .. H .. V .."> per parent→child link:
-   three drawn segments (stub, bus, drop). */
+function busLevel(parent, child) {
+    return parent.bottom + (child.top - parent.bottom) / 2;
+}
+
+function makeTreeDot(svg, x, y) {
+    /* Small dot at a junction, per the concept design */
+    const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    dot.setAttribute('class', 'tree-dot');
+    dot.setAttribute('cx', x.toFixed(1));
+    dot.setAttribute('cy', y.toFixed(1));
+    dot.setAttribute('r', '2.5');
+    svg.appendChild(dot);
+}
+
+/* Mobile (<=640px): elbows become a short vertical stem with a dot above each
+   child card — wrapped bands make full elbows spaghetti, and the card's own
+   relation line ("Barn till …") still names the parent. */
+function drawMobileStems(svg, groups, rectOf) {
+    groups.forEach(group => {
+        group.children.forEach(childCard => {
+            const child = rectOf(childCard);
+            const stem = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            stem.setAttribute('class', 'tree-line');
+            stem.setAttribute('d', 'M ' + child.cx.toFixed(1) + ' ' +
+                (child.top - 16).toFixed(1) + ' V ' + child.top.toFixed(1));
+            svg.appendChild(stem);
+            makeTreeDot(svg, child.cx, child.top - 16);
+        });
+    });
+}
+
+/* One <path class="tree-line" d="... V .. H .. V .."> per parent→child link
+   (stub, bus, drop) plus a dot at each junction: the parent stub meets the
+   bus once per parent, every child's drop starts with its own dot. */
 function drawTreeLines() {
     const container = document.getElementById('family-tree');
     if (!container) {
@@ -86,8 +119,16 @@ function drawTreeLines() {
         };
     };
 
-    treeConnectorGroups(container).forEach(group => {
+    const groups = treeConnectorGroups(container);
+    if (window.matchMedia('(max-width: 640px)').matches) {
+        drawMobileStems(svg, groups, rectOf);
+        container.appendChild(svg);
+        return;
+    }
+
+    groups.forEach(group => {
         const parent = rectOf(group.parentCard);
+        let busY = null;
         group.children.forEach(childCard => {
             const child = rectOf(childCard);
             if (child.top <= parent.bottom) {
@@ -97,7 +138,14 @@ function drawTreeLines() {
             path.setAttribute('class', 'tree-line');
             path.setAttribute('d', makeTreeLinePath(parent, child));
             svg.appendChild(path);
+            makeTreeDot(svg, child.cx, busLevel(parent, child));
+            if (busY === null) {
+                busY = busLevel(parent, child);
+            }
         });
+        if (busY !== null) {
+            makeTreeDot(svg, parent.cx, busY);
+        }
     });
 
     if (svg.childNodes.length > 0) {

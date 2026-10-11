@@ -176,8 +176,12 @@
 
 .tree-line {
     stroke: var(--line-neutral);
-    stroke-width: 2;
+    stroke-width: 1.5;
     fill: none;
+}
+
+.tree-dot {
+    fill: var(--line-neutral);
 }
 
 /* Mobile: bands stack, cards go half-width; connector stems simplify (tree-lines.js) */
