@@ -1,20 +1,79 @@
-/* Släktträff 2026 — base layout, header, sections, modal, form.
-   Tree-specific styles live in tree.css. */
+/* Släktträff 2026 — design tokens, base, header, gate, sections, instructions/stats.
+   Tree presentation lives in tree.css, form in forms.css, RSVP popup in modal.css.
+   admin.css (back-office, untouched this round) consumes the legacy-named tokens
+   marked [admin] below — keep them defined.
+
+   ============================ TOKENS TABLE ============================
+   Generation accents (pinned owner palette: G1 green, G2 blue, G3 orange,
+   G4 purple, G5 yellow). Each hex carries white text at WCAG AA (>=4.5:1
+   vs white, computed 2026-10-11) and clears 3:1 as a line/dot on both the
+   page background and white cards:
+     --gen-1  #15803d  5.02:1 on #ffffff (white text: PASS)
+     --gen-2  #2563eb  5.17:1 on #ffffff (white text: PASS)
+     --gen-3  #c2410c  5.18:1 on #ffffff (white text: PASS)
+     --gen-4  #9333ea  5.38:1 on #ffffff (white text: PASS)
+     --gen-5  #a16207  4.92:1 on #ffffff (white text: PASS)
+   Deviation from the concept image: its G5 is a light yellow (#facc15-ish,
+   ~1.5:1 with any text). AA wins — G5 darkens to golden yellow-700; the hue
+   family stays "yellow" and the legend/band labels add text redundancy.
+   Soft tints (--gen-N-soft) are backgrounds for chips/labels; they carry
+   dark text (#16171a, >=10:1), never white.
+
+   Neutrals (from the fleet design baseline, zinc ramp):
+     page bg    #f6f7f9   surface  #ffffff   borders #dcdfe4 / #e9ebef
+     text dark  #16171a  17.9:1 on white   text muted #5b6068  6.2:1 on white
+     connector  #6e737c  4.45:1 on page bg (>3:1 for non-text graphics)
+     focus ring #2563eb   action ink #16171a (white text 17.9:1)
+
+   RSVP semantics (pinned owner ruling 2026-09-25, expressed with tint+ring+glyph):
+     accept   green #0e8127  5.01:1 on white   decline red #b91c1c 6.47:1
+     unanswered neutral (no ring, white card). The RSVP ring is a 3px halo
+     plus ✓/✗ glyph — distinguishable from the G1 border regardless of hue.
+   ======================================================================= */
 
 :root {
-    --primary: #8B4513;
-    --primary-light: #A0522D;
-    --primary-dark: #654321;
-    --accent: #D2691E;
-    --cream: #F5F1E8;
-    --warm-white: #FAF8F5;
-    --text-dark: #2C1810;
-    --text-muted: #5C4033;
-    --border: #D4C4B0;
-    --success: #228B22;
-    --danger: #B22222;
-    --shadow: rgba(139, 69, 19, 0.15);
-    --line-color: #8B4513;
+    /* Generation accents + tints */
+    --gen-1: #15803d; --gen-1-soft: #e9f2ec;
+    --gen-2: #2563eb; --gen-2-soft: #e9effc;
+    --gen-3: #c2410c; --gen-3-soft: #fbeee6;
+    --gen-4: #9333ea; --gen-4-soft: #f3eafe;
+    --gen-5: #a16207; --gen-5-soft: #f7f1e3;
+
+    /* Neutrals */
+    --bg-page: #f6f7f9;
+    --surface: #ffffff;
+    --text-primary: #16171a;
+    --text-secondary: #5b6068;
+    --border-subtle: #e9ebef;
+    --line-neutral: #6e737c;
+    --focus-ring: #2563eb;
+    --ink-action: #16171a;
+
+    /* RSVP state colors (semantics pinned 2026-09-25) */
+    --success: #0e8127;   /* [admin] */
+    --danger: #b91c1c;    /* [admin] */
+
+    /* Legacy token names kept for admin.css / modal.css / forms.css
+       consumers; --primary/--accent/--primary-dark/--primary-light are
+       removed together with their last consumer in this redesign. */
+    --primary: #15803d;        /* transitional: modal h3 until restyle */
+    --primary-dark: #14532d;   /* transitional: modal labels */
+    --primary-light: #166534;  /* transitional: old gen-1 card fill */
+    --accent: #15803d;         /* transitional: focus accent */
+    --cream: #f3f4f7;          /* [admin] */
+    --warm-white: #f9fafb;     /* [admin] */
+    --text-dark: #16171a;      /* [admin] */
+    --text-muted: #5b6068;     /* [admin] */
+    --border: #dcdfe4;         /* [admin] */
+    --shadow: rgba(22, 23, 26, 0.07); /* [admin] shadow color */
+    --shadow-sm: 0 1px 2px rgba(22, 23, 26, 0.05);
+    --shadow-md: 0 2px 8px rgba(22, 23, 26, 0.06);
+
+    /* Shape & type */
+    --radius-card: 14px;
+    --radius-control: 8px;
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
 }
 
 * {
@@ -24,51 +83,52 @@
 }
 
 body {
-    font-family: 'Georgia', 'Palatino', serif;
-    background: linear-gradient(180deg, var(--cream) 0%, var(--warm-white) 100%);
-    color: var(--text-dark);
-    line-height: 1.6;
+    font-family: var(--font-sans);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* Header */
+/* Header — light band, pinned copy, green accent rule under the title */
 header {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-    color: white;
-    padding: 3rem 1.5rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 2.75rem 1.5rem 2.25rem;
     text-align: center;
-    position: relative;
-    overflow: hidden;
-}
-
-header::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L35 25 L55 25 L38 38 L45 58 L30 45 L15 58 L22 38 L5 25 L25 25 Z' fill='rgba(255,255,255,0.05)'/%3E%3C/svg%3E");
-    opacity: 0.3;
 }
 
 header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-    position: relative;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    font-size: 1.75rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+}
+
+header h1::after {
+    content: '';
+    display: block;
+    width: 56px;
+    height: 4px;
+    margin: 0.9rem auto 0;
+    border-radius: 2px;
+    background: var(--gen-1);
 }
 
 header p {
-    font-size: 1.2rem;
-    opacity: 0.95;
-    position: relative;
+    margin-top: 0.6rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
 }
 
-.subtitle {
+header .subtitle {
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 1.02rem;
     font-style: italic;
-    margin-top: 0.5rem;
-    opacity: 0.9;
-    position: relative;
 }
 
 /* Container */
@@ -78,50 +138,41 @@ header p {
     padding: 2rem 1rem;
 }
 
-/* Section styling */
+/* Section cards */
 section {
-    background: white;
-    border-radius: 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
     padding: 2rem;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 20px var(--shadow);
+    box-shadow: var(--shadow-sm);
 }
 
 section h2 {
-    color: var(--primary);
-    font-size: 1.8rem;
-    margin-bottom: 1.5rem;
-    padding-bottom: 0.5rem;
-    border-bottom: 3px solid var(--accent);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-section h2::before {
-    content: '🌳';
-    font-size: 1.4rem;
+    color: var(--text-primary);
+    font-size: 1.35rem;
+    font-weight: 650;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 /* API error banner */
 .api-error {
     display: none;
-    background: #fdecea;
-    border: 2px solid var(--danger);
+    background: #fdf1f0;
+    border: 1px solid var(--danger);
     color: var(--danger);
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
+    padding: 0.9rem 1.25rem;
+    border-radius: var(--radius-control);
     margin-bottom: 1.5rem;
     text-align: center;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .api-error.active {
     display: block;
 }
-
-/* Contact fields inside the person modal are styled in modal.css (popup)
-   and forms.css (.form-group fields). */
 
 /* Password gate screen */
 .password-screen {
@@ -133,65 +184,84 @@ section h2::before {
 }
 
 .password-box {
-    background: white;
-    border-radius: 16px;
-    padding: 2.5rem 2rem;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-card);
+    padding: 2.5rem 2rem 2.25rem;
     max-width: 420px;
     width: 100%;
-    box-shadow: 0 4px 20px var(--shadow);
+    box-shadow: var(--shadow-md);
     text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* The five-generation stripe doubles as the tree legend's visual key */
+.password-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg,
+        var(--gen-1) 0 20%, var(--gen-2) 20% 40%, var(--gen-3) 40% 60%,
+        var(--gen-4) 60% 80%, var(--gen-5) 80% 100%);
 }
 
 .password-box h1 {
-    color: var(--primary);
-    font-size: 1.8rem;
-    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+    font-size: 1.6rem;
+    font-weight: 650;
+    margin-bottom: 0.6rem;
 }
 
 .password-lead {
-    color: var(--text-muted);
+    color: var(--text-secondary);
     margin-bottom: 1.5rem;
 }
 
 .password-box input[type="password"] {
     width: 100%;
-    padding: 0.75rem 1rem;
-    border: 2px solid var(--border);
-    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
     font-size: 1rem;
     font-family: inherit;
-    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    background: var(--surface);
 }
 
-.password-box input[type="password"]:focus {
-    outline: none;
-    border-color: var(--accent);
+.password-box input[type="password"]:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 1px;
 }
 
 .password-error {
     color: var(--danger);
-    font-weight: bold;
+    font-weight: 600;
     min-height: 1.4em;
     margin-top: 0.5rem;
 }
 
-/* Instructions and stats */
+/* Instructions and stats above the tree */
 .instructions {
-    background: var(--cream);
-    padding: 1rem;
-    border-radius: 8px;
+    background: var(--warm-white);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--gen-1);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-control);
     margin-bottom: 1.5rem;
-    border-left: 4px solid var(--accent);
 }
 
 .instructions h4 {
-    color: var(--primary-dark);
-    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    margin-bottom: 0.4rem;
 }
 
 .instructions ul {
-    margin-left: 1.5rem;
-    color: var(--text-muted);
+    margin-left: 1.25rem;
+    color: var(--text-secondary);
 }
 
 .instructions li {
@@ -200,53 +270,46 @@ section h2::before {
 
 .tree-stats {
     background: var(--warm-white);
-    padding: 1rem;
-    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    padding: 0.9rem;
+    border-radius: var(--radius-control);
     margin-bottom: 1.5rem;
     text-align: center;
 }
 
 .tree-stats p {
-    margin: 0.5rem 0;
-    color: var(--text-muted);
+    margin: 0.25rem 0;
+    color: var(--text-secondary);
 }
 
 .tree-stats strong {
-    color: var(--primary);
+    color: var(--text-primary);
 }
 
 /* Responsive */
 @media (max-width: 768px) {
+    header {
+        padding: 2rem 1rem 1.75rem;
+    }
+
     header h1 {
-        font-size: 1.8rem;
+        font-size: 1.35rem;
     }
 
     header p {
-        font-size: 1rem;
+        font-size: 0.85rem;
     }
 
     section {
-        padding: 1.5rem;
+        padding: 1.25rem;
     }
 
     section h2 {
-        font-size: 1.4rem;
-    }
-
-    .checkbox-group {
-        grid-template-columns: 1fr;
+        font-size: 1.2rem;
     }
 }
 
 @media (max-width: 480px) {
-    header {
-        padding: 2rem 1rem;
-    }
-
-    header h1 {
-        font-size: 1.5rem;
-    }
-
     .container {
         padding: 1rem 0.5rem;
     }
