@@ -120,135 +120,8 @@ section h2::before {
     display: block;
 }
 
-/* Modal */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    padding: 1rem;
-}
-
-.modal.active {
-    display: flex;
-}
-
-.modal-content {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    max-width: 450px;
-    width: 100%;
-    position: relative;
-    animation: modalSlide 0.3s ease;
-}
-
-@keyframes modalSlide {
-    from {
-        transform: translateY(-20px);
-        opacity: 0;
-    }
-    to {
-        transform: translateY(0);
-        opacity: 1;
-    }
-}
-
-.modal-close {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background: none;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    color: var(--text-muted);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-
-.modal-close:hover {
-    background: var(--cream);
-}
-
-.modal h3 {
-    color: var(--primary);
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-.modal-info {
-    background: var(--cream);
-    padding: 1rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-}
-
-.modal-info p {
-    margin: 0.5rem 0;
-}
-
-.modal-info strong {
-    color: var(--primary-dark);
-}
-
-/* RSVP buttons in the person modal */
-.rsvp-buttons {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
-}
-
-.rsvp-btn {
-    flex: 1;
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-    font-weight: bold;
-    font-family: inherit;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-    color: white;
-}
-
-.rsvp-btn.accept {
-    background: var(--success);
-}
-
-.rsvp-btn.accept:hover {
-    background: #1c6b1c;
-}
-
-.rsvp-btn.decline {
-    background: var(--danger);
-}
-
-.rsvp-btn.decline:hover {
-    background: #8f1b1b;
-}
-
-.rsvp-btn:disabled {
-    opacity: 0.6;
-    cursor: wait;
-}
-
-.rsvp-status-line {
-    margin-top: 0.75rem;
-    font-style: italic;
-    color: var(--text-muted);
-}
+/* Contact fields inside the person modal are styled in modal.css (popup)
+   and forms.css (.form-group fields). */
 
 /* Password gate screen */
 .password-screen {
@@ -300,19 +173,6 @@ section h2::before {
     font-weight: bold;
     min-height: 1.4em;
     margin-top: 0.5rem;
-}
-
-/* Contact fields inside the person modal */
-.rsvp-contact {
-    margin-top: 1.25rem;
-    border-top: 2px solid var(--border);
-    padding-top: 1rem;
-    text-align: left;
-}
-
-.rsvp-contact h4 {
-    color: var(--primary-dark);
-    margin-bottom: 0.75rem;
 }
 
 /* Instructions and stats */
