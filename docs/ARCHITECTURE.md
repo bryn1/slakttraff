@@ -73,16 +73,23 @@ app/
 teddy/
   index.html          markup (password screen, header, tree container, form, person modal
                       with contact fields)
-  style.css           base layout, header, password screen, modal, responsive
+  style.css           design tokens (:root), base layout, header, password
+                      screen, sections + instructions/stats, responsive;
+                      tree/form/popup presentation lives in the files below
   tree.css            family tree, person spots, RSVP colour states (green/red)
   forms.css           registration form + success message
+  modal.css           RSVP popup (person modal): overlay, content card with a
+                      per-generation accent bar, RSVP buttons; the popup's
+                      .form-group field styles live in forms.css (shared)
   api.js              API client (login, fetchPersons, submitRsvp, submitRegistration);
                       sends Bearer token, on 401 clears token + returns to password screen
   tree.js             tree rendering from API data + RSVP colour application
                       + connector redraw hook (drawTreeLines)
   tree-lines.js       classical family-tree connector lines (MC 3929): one
                       overlay SVG in #family-tree, one elbow path (stub/bus/
-                      drop) per rendered parent→child link (parents[0]),
+                      drop) per rendered parent→child link (parents[0]) plus a
+                      junction dot where paths meet; at <=640px the elbows
+                      simplify to a vertical stem + dot above each child;
                       coords relative to the tree container, redrawn on
                       render, resize (150 ms debounce) and fonts.ready;
                       pointer-events:none, aria-hidden, below the cards;
