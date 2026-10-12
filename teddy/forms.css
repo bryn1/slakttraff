@@ -101,7 +101,7 @@
 }
 
 .submit-btn:hover {
-    background: #33363d;
+    background: var(--ink-action-hover);
 }
 
 .submit-btn:disabled {
@@ -135,7 +135,7 @@
 /* Success message: light green surface, dark text (AA on tint) */
 .success-message {
     display: none;
-    background: #f1f8f2;
+    background: var(--success-soft);
     border: 1px solid var(--success);
     color: var(--text-primary);
     padding: 1.75rem;

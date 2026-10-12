@@ -135,7 +135,7 @@
 }
 
 .rsvp-btn.accept:hover {
-    background: #0a6a1f;
+    background: var(--success-hover);
 }
 
 .rsvp-btn.decline {
@@ -143,7 +143,7 @@
 }
 
 .rsvp-btn.decline:hover {
-    background: #9c1717;
+    background: var(--danger-hover);
 }
 
 .rsvp-btn:disabled {

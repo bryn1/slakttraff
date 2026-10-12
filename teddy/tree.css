@@ -146,7 +146,7 @@
 /* RSVP states. Ring + tint + ✓/✗ glyph: the state never relies on hue alone,
    and the ring sits outside the generation border so both stay readable. */
 .person-card.rsvp-accepted {
-    background: #f1f8f2;
+    background: var(--success-soft);
     box-shadow: 0 0 0 3px rgba(14, 129, 39, 0.35);
 }
 
@@ -156,7 +156,7 @@
 }
 
 .person-card.rsvp-declined {
-    background: #fcf2f1;
+    background: var(--danger-soft);
     box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.35);
 }
 

@@ -48,10 +48,15 @@
     --line-neutral: #6e737c;
     --focus-ring: #2563eb;
     --ink-action: #16171a;
+    --ink-action-hover: #33363d;
 
     /* RSVP state colors (semantics pinned 2026-09-25) */
     --success: #0e8127;   /* [admin] */
     --danger: #b91c1c;    /* [admin] */
+    --success-soft: #f1f8f2;   /* accepted-card + success-message tint */
+    --danger-soft: #fcf2f1;    /* declined-card tint */
+    --success-hover: #0a6a1f;  /* accept-button hover */
+    --danger-hover: #9c1717;   /* decline-button hover */
 
     /* Legacy token names kept for admin.css (back-office, untouched this
        round): it consumes these as its surface contract. */
