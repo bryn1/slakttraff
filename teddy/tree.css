@@ -198,6 +198,12 @@
         gap: 0.75rem;
     }
 
+    /* Extra clearance under the band chip: the 16px connector stems + 2.5px
+       dots sat 4.1px inside the label box at 0.9rem (T9 F7). */
+    .generation-label {
+        margin: 0 auto 1.5rem;
+    }
+
     /* Mobile: flatten the grouping boxes so every card is a direct half-width
        cell of the band grid. A shrink-to-fit group box would otherwise let the
        cards' percentage flex-basis resolve against min-content and collapse
