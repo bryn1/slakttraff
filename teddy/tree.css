@@ -21,7 +21,7 @@
     border-left: 4px solid var(--line-neutral);
     border-radius: var(--radius-control);
     background: var(--warm-white);
-    font-size: 0.8rem;
+    font-size: 0.88rem;
     font-weight: 650;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -96,13 +96,13 @@
 }
 
 .person-birth {
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     color: var(--text-secondary);
     margin-top: 0.1rem;
 }
 
 .person-relation {
-    font-size: 0.78rem;
+    font-size: 0.82rem;
     color: var(--text-secondary);
     line-height: 1.35;
     margin-top: 0.15rem;
@@ -219,13 +219,9 @@
         font-size: 0.88rem;
     }
 
-    .person-birth,
-    .person-relation {
-        font-size: 0.72rem;
-    }
-
+    /* No font-size overrides here: the base 0.82rem birth/relation and legend
+       sizes must not drop below the 12px mobile floor (T9 readability F4/F5). */
     .tree-legend li {
-        font-size: 0.74rem;
         padding: 0.25rem 0.6rem 0.25rem 0.45rem;
     }
 }
