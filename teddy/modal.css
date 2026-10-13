@@ -56,12 +56,12 @@
     right: 0.75rem;
     background: none;
     border: none;
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     line-height: 1;
     cursor: pointer;
     color: var(--text-secondary);
-    width: 36px;
-    height: 36px;
+    width: 44px; /* 44x44 minimum tap target (T9 F6) */
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
