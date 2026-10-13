@@ -41,7 +41,7 @@
 .form-group input::placeholder,
 .form-group textarea::placeholder {
     color: var(--text-secondary);
-    opacity: 0.8;
+    opacity: 1; /* .8 opacity blended the color to 3.98:1 — AA fail (T9 F3) */
 }
 
 /* Generation checkboxes echo the tree legend colours */
