@@ -81,7 +81,15 @@ async function answerRsvp(status) {
         notes: document.getElementById('rsvp-notes').value.trim(),
     };
     const buttons = [document.getElementById('rsvp-accept-btn'), document.getElementById('rsvp-decline-btn')];
+    /* Disabling the FOCUSED button drops focus to BODY — with the inert
+       background that is a keyboard pocket outside the dialog: park focus on
+       the close button during the POST and return it to the pressed button
+       afterwards (unless the dialog closed on success). */
+    const sourceBtn = buttons.includes(document.activeElement) ? document.activeElement : null;
     buttons.forEach(btn => { btn.disabled = true; });
+    if (sourceBtn) {
+        document.getElementById('modal-close-btn').focus();
+    }
     try {
         const updated = await API.submitRsvp(personId, status, contact);
         personsById[personId] = updated;
@@ -94,6 +102,9 @@ async function answerRsvp(status) {
         showError('Kunde inte spara ditt svar: ' + err.message);
     } finally {
         buttons.forEach(btn => { btn.disabled = false; });
+        if (sourceBtn && sourceBtn.isConnected && modal.classList.contains('active')) {
+            sourceBtn.focus();
+        }
     }
 }
 
@@ -112,9 +123,13 @@ function bindModal() {
         }
     });
     /* Tab wrap at the dialog bounds (belt for the inert background): keeps the
-       cycle inside the popup on browsers without inert support. */
-    modal.addEventListener('keydown', e => {
-        if (e.key !== 'Tab') {
+       cycle inside the popup on browsers without inert support. Bound to
+       DOCUMENT while the dialog is open — keydown from BODY (e.g. after a
+       disabled RSVP button dropped focus) never reaches a modal-bound
+       handler, which is exactly the state the belt is needed in. Only ever
+       preventDefaults at the dialog bounds. */
+    document.addEventListener('keydown', e => {
+        if (e.key !== 'Tab' || !modal.classList.contains('active')) {
             return;
         }
         const focusables = modal.querySelectorAll(
