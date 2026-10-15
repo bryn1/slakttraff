@@ -3,6 +3,8 @@
 
 let personsById = {};
 let currentPersonId = null;
+/* The card that opened the dialog; focus returns here on close (F2 a11y). */
+let lastFocusedCard = null;
 
 function showError(message) {
     const banner = document.getElementById('api-error');
@@ -37,6 +39,8 @@ function setModalAccent(generation) {
 
 function openPersonModal(person) {
     currentPersonId = person.id;
+    lastFocusedCard = document.querySelector(
+        '.person-card[data-person-id="' + person.id + '"]');
     setModalAccent(person.generation);
     document.getElementById('modal-name').textContent = person.name;
     document.getElementById('modal-generation').textContent = 'Generation ' + person.generation;
@@ -45,10 +49,19 @@ function openPersonModal(person) {
     document.getElementById('modal-description').textContent = person.description || '';
     document.getElementById('modal-rsvp-status').textContent = rsvpStatusText(person.rsvp_status);
     modal.classList.add('active');
+    /* Real dialog semantics: the page behind is inert (no Tab, no clicks, out
+       of the a11y tree), then initial focus lands on the close button. */
+    document.getElementById('site-content').inert = true;
+    document.getElementById('modal-close-btn').focus();
 }
 
 function closeModal() {
     modal.classList.remove('active');
+    document.getElementById('site-content').inert = false;
+    if (lastFocusedCard && lastFocusedCard.isConnected) {
+        lastFocusedCard.focus();
+    }
+    lastFocusedCard = null;
     currentPersonId = null;
 }
 
@@ -96,6 +109,27 @@ function bindModal() {
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape' && modal.classList.contains('active')) {
             closeModal();
+        }
+    });
+    /* Tab wrap at the dialog bounds (belt for the inert background): keeps the
+       cycle inside the popup on browsers without inert support. */
+    modal.addEventListener('keydown', e => {
+        if (e.key !== 'Tab') {
+            return;
+        }
+        const focusables = modal.querySelectorAll(
+            'button, input, textarea, select, a[href], [tabindex]:not([tabindex="-1"])');
+        if (!focusables.length) {
+            return;
+        }
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+            e.preventDefault();
+            last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
         }
     });
 }
