@@ -84,7 +84,7 @@
     font-size: 1.4rem;
     font-weight: 650;
     margin-bottom: 0.75rem;
-    padding-right: 2rem; /* keep clear of the close button */
+    padding-right: 2.5rem; /* keep clear of the close button AND its focus ring (ring outer edge sits 4px left of the 44px box; 2rem left the long-name clearance at 0) */
 }
 
 .modal-info {
