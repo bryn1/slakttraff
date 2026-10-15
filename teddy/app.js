@@ -235,6 +235,10 @@ function bindForm() {
 /* --- Password gate --- */
 
 function showPasswordScreen() {
+    /* 401 mid-dialog must not leave a stale dialog: closeModal tears down
+       active + inert so the gate is not buried under the z-1000 overlay.
+       Harmless (idempotent) when the dialog is already closed. */
+    closeModal();
     document.getElementById('password-screen').style.display = 'flex';
     document.getElementById('site-content').hidden = true;
     document.getElementById('password-input').value = '';
