@@ -52,7 +52,17 @@ function openPersonModal(person) {
     /* Real dialog semantics: the page behind is inert (no Tab, no clicks, out
        of the a11y tree), then initial focus lands on the close button. */
     document.getElementById('site-content').inert = true;
+    setModalError('');
     document.getElementById('modal-close-btn').focus();
+}
+
+/* RSVP feedback must render INSIDE the dialog: #api-error sits in the inert
+   background (behind the overlay, out of the a11y tree) while the dialog is
+   open, so the banner stays reserved for non-dialog contexts (P1-2). */
+function setModalError(message) {
+    const node = document.getElementById('modal-error');
+    node.textContent = message || '';
+    node.hidden = !message;
 }
 
 function closeModal() {
@@ -72,7 +82,7 @@ async function answerRsvp(status) {
     const personId = currentPersonId;
     const email = document.getElementById('rsvp-email').value.trim();
     if (!email) {
-        showError('Fyll i din e-postadress så vi kan nå dig.');
+        setModalError('Fyll i din e-postadress så vi kan nå dig.');
         return;
     }
     const contact = {
@@ -96,10 +106,11 @@ async function answerRsvp(status) {
         applyRsvpColour(personId, updated.rsvp_status);
         document.getElementById('modal-rsvp-status').textContent = rsvpStatusText(updated.rsvp_status);
         updateTreeStats(Object.values(personsById));
+        setModalError('');
         showError(null);
         closeModal();
     } catch (err) {
-        showError('Kunde inte spara ditt svar: ' + err.message);
+        setModalError('Kunde inte spara ditt svar: ' + err.message);
     } finally {
         buttons.forEach(btn => { btn.disabled = false; });
         if (sourceBtn && sourceBtn.isConnected && modal.classList.contains('active')) {

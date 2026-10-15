@@ -156,6 +156,16 @@
     color: var(--text-secondary);
 }
 
+/* In-dialog RSVP feedback (P1-2): the #api-error banner is behind the overlay
+   and inert while the dialog is open, so validation/POST errors surface in
+   the aria-live node here instead. --danger on --surface = 6.47:1 (tokens). */
+.modal-error {
+    margin-top: 0.6rem;
+    color: var(--danger);
+    font-weight: 600;
+    text-align: left;
+}
+
 /* Contact fields inside the person modal */
 .rsvp-contact {
     margin-top: 1.25rem;

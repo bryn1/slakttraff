@@ -156,6 +156,9 @@
                 <button class="rsvp-btn accept" id="rsvp-accept-btn">Kommer ✓</button>
                 <button class="rsvp-btn decline" id="rsvp-decline-btn">Kommer inte ✗</button>
             </div>
+            <!-- RSVP feedback while the dialog is open: #api-error sits behind
+                 the overlay in the inert background, so it cannot reach here -->
+            <p class="modal-error" id="modal-error" role="status" aria-live="polite" hidden></p>
             <p class="rsvp-status-line" id="modal-rsvp-status"></p>
             <div class="rsvp-contact">
                 <h4>Dina kontaktuppgifter (syns bara för administratören)</h4>
