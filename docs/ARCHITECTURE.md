@@ -72,7 +72,8 @@ app/
                           audit trail, newest first, skip/limit paging
 teddy/
   index.html          markup (password screen, header, tree container, form, person modal
-                      with contact fields)
+                      (role=dialog, aria-modal, labelled by person name) with
+                      contact fields)
   style.css           design tokens (:root), base layout, header, password
                       screen, sections + instructions/stats, responsive;
                       tree/form/popup presentation lives in the files below
@@ -95,7 +96,11 @@ teddy/
                       pointer-events:none, aria-hidden, below the cards;
                       no data logic, no click handling
   app.js              page wiring: password gate, init/load, person modal + RSVP +
-                      contact fields, form submit
+                      contact fields, form submit; modal keyboard journey (MC 10028.3):
+                      open/closeModal own `#site-content.inert` — the modal markup lives
+                      OUTSIDE #site-content and must stay there (an inerted ancestor would
+                      freeze the dialog); initial focus → close button, focus restored to
+                      originating card; Tab-wrap belt at dialog bounds
   admin.html          admin page (MC 3930): admin password gate + two tabs —
                       "Ändringslogg" (RSVP change-log audit table, newest first,
                       humanised Swedish status words with green/red colour hint)
