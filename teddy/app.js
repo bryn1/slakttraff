@@ -68,8 +68,16 @@ function setModalError(message) {
 function closeModal() {
     modal.classList.remove('active');
     document.getElementById('site-content').inert = false;
-    if (lastFocusedCard && lastFocusedCard.isConnected) {
-        lastFocusedCard.focus();
+    /* The tracked card may have been REPLACED by a re-render while the dialog
+       was open (401 → re-login → init chain): re-query the live node by
+       person id; fall back to the tracked reference with its isConnected
+       guard. Either way restore, never strand. */
+    const live = currentPersonId !== null
+        ? document.querySelector('.person-card[data-person-id="' + currentPersonId + '"]')
+        : null;
+    const target = live || (lastFocusedCard && lastFocusedCard.isConnected ? lastFocusedCard : null);
+    if (target) {
+        target.focus();
     }
     lastFocusedCard = null;
     currentPersonId = null;
