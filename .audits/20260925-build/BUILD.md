@@ -1,6 +1,6 @@
 # BUILD — Släktträff functional build (2026-09-25)
 
-Commit: `35a47d1` on master in /srv/workspace/slakttraff (author "svarkor-ai (slakttraff build)").
+Commit: `35a47d1` on master in /srv/workspace/slakttraff (author "bryn1 (slakttraff build)").
 Note on process: this run executed INLINE by the worker child — the harness capped subagent
 spawning at maxDepth 1 (probe: "subagent depth 2 exceeds maxDepth 1"), so no sub-children
 could be spawned. All phases (build, test, adversarial review, architecture check) were
