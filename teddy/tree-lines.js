@@ -6,9 +6,8 @@
    renderTree, on resize and when fonts settle.
 
    MC 10028.2 (occlusion fix): every segment is obstacle-checked against the
-   rendered cards and generation chips, so a connector never crosses a card's
-   text block. Wrapped bands route through the free horizontal bands between
-   sub-rows (and side channels when a straight drop would hit a card). */
+   rendered cards and chips; band elbow -> side-channel jog -> full-window
+   trunk -> verified stem-or-nothing last resort: no line ever crosses text. */
 'use strict';
 
 const TREE_LINE_RESIZE_DEBOUNCE_MS = 150;
@@ -54,9 +53,28 @@ function treeConnectorGroups(container) {
 
 function segmentHitsRectsX(rects, x, y1, y2) {
     /* Vertical segment at x: hits a box when x is inside it and the y spans
-       overlap (strict — a segment ending exactly on a box edge is a touch). */
+       overlap (strict — a segment ending on a box edge is only a touch). */
     const lo = Math.min(y1, y2), hi = Math.max(y1, y2);
     return rects.some(r => x > r.x1 && x < r.x2 && hi > r.y1 && lo < r.y2);
+}
+
+function segmentHitsRectsY(rects, y, x1, x2) {
+    /* Horizontal counterpart of segmentHitsRectsX. */
+    const lo = Math.min(x1, x2), hi = Math.max(x1, x2);
+    return rects.some(r => y > r.y1 && y < r.y2 && hi > r.x1 && lo < r.x2);
+}
+
+function segmentsClear(rects, pts) {
+    /* True when no axis-parallel segment of pts pierces any box. */
+    for (let i = 1; i < pts.length; i++) {
+        const x1 = pts[i - 1][0], y1 = pts[i - 1][1];
+        const x2 = pts[i][0], y2 = pts[i][1];
+        if (x1 === x2 ? segmentHitsRectsX(rects, x1, y1, y2)
+                     : segmentHitsRectsY(rects, y1, x1, x2)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function complementBands(intervals, from, to) {
@@ -79,8 +97,7 @@ function complementBands(intervals, from, to) {
     return bands;
 }
 
-/* Horizontal corridors (y values) across the full width that no obstacle
-   occupies between yFrom and yTo: safe levels for bus segments. */
+/* Horizontal corridors (y) across the full width no obstacle occupies: bus levels. */
 function freeYSlices(obstacles, yFrom, yTo) {
     return complementBands(
         obstacles.map(r => [r.y1, r.y2]).filter(iv => iv[1] > yFrom && iv[0] < yTo),
@@ -97,13 +114,14 @@ function freeXSlices(obstacles, yFrom, yTo, xFrom, xTo) {
         xFrom, xTo);
 }
 
-/* Route one parent→child connector. Returns {pts: [[x,y],…]} from the
-   parent's bottom-centre to the child's top-centre. Preference order:
-   (1) the classic elbow at the gap mid-level, (2) the same elbow with the
-   bus lifted/dropped into a free horizontal band, (3) a jog through a free
-   side channel. Only falls back to the classic elbow if nothing is clean —
-   the connector is never dropped. parent/child own boxes never count as
-   obstacles (the route touches their edges on purpose). */
+/* Route one parent→child connector: {pts: [[x,y],…]} from the parent's
+   bottom-centre to the child's top-centre, or {pts: null, stem} when no
+   clean route exists. Preference: (1) classic elbow at the gap mid-level,
+   (2) same elbow with the bus in a free horizontal band, (3) jog through a
+   free side channel, (4) trunk down a full-window x channel. The last
+   resort is always verified — provably-clean elbow, else a clamped stem
+   (mobile idiom), else no connector; an occlusive line is never drawn.
+   parent/child own boxes never count as obstacles. */
 function routeConnector(parent, child, obstacles, width) {
     const own = obstacles.filter(r => r.el !== parent.el && r.el !== child.el);
     const ideal = (parent.bottom + child.top) / 2;
@@ -151,7 +169,40 @@ function routeConnector(parent, child, obstacles, width) {
         }
     }
 
-    return elbowDots(ideal);
+    /* Full-window trunk (MC 10028.2 c2): wrapped rows can tile every band
+       level yet leave an x channel free across the whole window — dual to
+       the band family. One verified cross out of the parent and into the
+       child completes it. */
+    const trunkBands = wide.slice().sort((a, b) =>
+        Math.abs((a.a + a.b) / 2 - ideal) - Math.abs((b.a + b.b) / 2 - ideal));
+    for (const ch of freeXSlices(obstacles, parent.bottom + 1, child.top - 1, 2, width - 2)
+        .filter(c => c.b - c.a > 2)
+        .sort((a, b) => Math.abs((a.a + a.b) / 2 - (parent.cx + child.cx) / 2) -
+                        Math.abs((b.a + b.b) / 2 - (parent.cx + child.cx) / 2))) {
+        const gx = (ch.a + ch.b) / 2;
+        for (const topBand of trunkBands) {
+            const y1 = (topBand.a + topBand.b) / 2;
+            for (const botBand of trunkBands) {
+                const y2 = (botBand.a + botBand.b) / 2;
+                if (y2 <= y1) continue;
+                const pts = [[parent.cx, parent.bottom], [parent.cx, y1],
+                             [gx, y1], [gx, y2], [child.cx, y2], [child.cx, child.top]];
+                if (!segmentsClear(own, pts)) return { pts };
+            }
+        }
+    }
+
+    /* Last resort (MC 10028.2 c2): the old unchecked midpoint elbow was
+       occlusive whenever it fired. Now: the classic elbow only if fully
+       verified clean, else a clamped stem above the child (mobile idiom),
+       else no connector — the card's own relation text names the parent. */
+    const idealRoute = elbowDots(ideal);
+    if (!segmentsClear(own, idealRoute.pts)) return idealRoute;
+    for (const stem of [12, 8, 6]) {
+        const pts = [[child.cx, child.top - stem], [child.cx, child.top]];
+        if (!segmentsClear(own, pts)) return { pts, stem: true };
+    }
+    return { pts: null, stem: true };
 }
 
 function treePathD(pts) {
@@ -217,6 +268,9 @@ function drawTreeLines() {
     if (previous) {
         previous.remove();
     }
+    if (window.__rebindCardObserver) {
+        window.__rebindCardObserver();
+    }
 
     const width = Math.max(container.scrollWidth, Math.round(containerRect.width));
     const height = Math.max(container.scrollHeight, Math.round(containerRect.height));
@@ -228,9 +282,8 @@ function drawTreeLines() {
     svg.setAttribute('aria-hidden', 'true');
     svg.setAttribute('focusable', 'false');
 
-    /* getBoundingClientRect is viewport-relative, so page scroll cancels out
-       in the card-vs-container differencing; the container's own scroll
-       offsets are added so a scrolling wrapper stays correct. */
+    /* Viewport-relative rects; page scroll cancels in differencing, the
+       container's own scroll offsets keep a scrolling wrapper correct. */
     const rectOf = card => {
         const r = card.getBoundingClientRect();
         const left = r.left - containerRect.left + container.scrollLeft;
@@ -245,8 +298,7 @@ function drawTreeLines() {
         };
     };
 
-    /* Obstacles for the router: every card box and every generation chip
-       (chips are opaque too — a line behind one reads as severed). */
+    /* Obstacles: every card box and chip (a line behind a chip reads as severed). */
     const obstacles = [];
     container.querySelectorAll('.person-card, .generation-label').forEach(el => {
         const r = rectOf(el);
@@ -272,19 +324,31 @@ function drawTreeLines() {
             if (child.top <= parent.bottom) {
                 return; // non-downward geometry (overlap/edge case): skip, never draw up
             }
-            const pts = routeConnector(parent, child, obstacles, width).pts;
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('class', 'tree-line');
-            path.setAttribute('d', treePathD(pts));
-            svg.appendChild(path);
-            /* Dots stay at the junctions: where the parent stub meets the bus
-               (once per level) and where the child drop starts. */
-            const parentJunction = pts[1][0].toFixed(1) + '@' + pts[1][1].toFixed(1);
-            if (!junctions.has(parentJunction)) {
-                junctions.add(parentJunction);
-                makeTreeDot(svg, pts[1][0], pts[1][1]);
+            const route = routeConnector(parent, child, obstacles, width);
+            if (route.pts) {
+                const pts = route.pts;
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('class', 'tree-line');
+                path.setAttribute('d', treePathD(pts));
+                svg.appendChild(path);
+                /* Junction dots: parent-stub/bus (once per level) + child drop start. */
+                const parentJunction = pts[1][0].toFixed(1) + '@' + pts[1][1].toFixed(1);
+                if (!junctions.has(parentJunction)) {
+                    junctions.add(parentJunction);
+                    makeTreeDot(svg, pts[1][0], pts[1][1]);
+                }
+                makeTreeDot(svg, pts[pts.length - 2][0], pts[pts.length - 2][1]);
             }
-            makeTreeDot(svg, pts[pts.length - 2][0], pts[pts.length - 2][1]);
+            if (route.stem) {
+                /* A stem route carries no parent stub: place the parent's
+                   junction dot once; a dropped connector gets the child dot. */
+                const pj = parent.cx.toFixed(1) + '@' + parent.bottom.toFixed(1);
+                if (!junctions.has(pj)) {
+                    junctions.add(pj);
+                    makeTreeDot(svg, parent.cx, parent.bottom);
+                }
+                if (!route.pts) makeTreeDot(svg, child.cx, child.top);
+            }
         });
     });
 
@@ -302,15 +366,29 @@ function scheduleTreeLineRedraw() {
 }
 window.addEventListener('resize', scheduleTreeLineRedraw);
 
-/* The tree re-wraps (rows grow/shrink) after RSVP marks, fonts or data land;
-   a connector drawn against a transient layout lands on the wrong cards.
-   Watching the container's own box catches every such reflow — the absolute
-   overlay never changes it, so this cannot self-trigger. */
+/* RSVP marks, fonts or data re-wrap the tree. The container box can stay
+   identical while a card widens and re-wraps its row, so a container-only
+   observer goes stale: watch the cards too, re-binding on each draw. The
+   overlay is absolute + pointer-events:none, so none of this self-triggers. */
 if (window.ResizeObserver) {
     const observed = document.getElementById('family-tree');
     if (observed) {
         new ResizeObserver(scheduleTreeLineRedraw).observe(observed);
     }
+    let cardObserver = null;
+    let observedCards = new WeakSet();
+    window.__rebindCardObserver = function () {
+        const container = document.getElementById('family-tree');
+        if (!container) return;
+        if (!cardObserver) cardObserver = new ResizeObserver(scheduleTreeLineRedraw);
+        container.querySelectorAll('.person-card, .generation-label').forEach(el => {
+            if (!observedCards.has(el)) {
+                observedCards.add(el);
+                cardObserver.observe(el);
+            }
+        });
+    };
+    window.__rebindCardObserver();
 }
 
 if (document.fonts && document.fonts.ready) {
