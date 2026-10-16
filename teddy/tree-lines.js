@@ -169,29 +169,6 @@ function routeConnector(parent, child, obstacles, width) {
         }
     }
 
-    /* Full-window trunk (MC 10028.2 c2): wrapped rows can tile every band
-       level yet leave an x channel free across the whole window — dual to
-       the band family. One verified cross out of the parent and into the
-       child completes it. */
-    const trunkBands = wide.slice().sort((a, b) =>
-        Math.abs((a.a + a.b) / 2 - ideal) - Math.abs((b.a + b.b) / 2 - ideal));
-    for (const ch of freeXSlices(obstacles, parent.bottom + 1, child.top - 1, 2, width - 2)
-        .filter(c => c.b - c.a > 2)
-        .sort((a, b) => Math.abs((a.a + a.b) / 2 - (parent.cx + child.cx) / 2) -
-                        Math.abs((b.a + b.b) / 2 - (parent.cx + child.cx) / 2))) {
-        const gx = (ch.a + ch.b) / 2;
-        for (const topBand of trunkBands) {
-            const y1 = (topBand.a + topBand.b) / 2;
-            for (const botBand of trunkBands) {
-                const y2 = (botBand.a + botBand.b) / 2;
-                if (y2 <= y1) continue;
-                const pts = [[parent.cx, parent.bottom], [parent.cx, y1],
-                             [gx, y1], [gx, y2], [child.cx, y2], [child.cx, child.top]];
-                if (!segmentsClear(own, pts)) return { pts };
-            }
-        }
-    }
-
     /* Last resort (MC 10028.2 c2): the old unchecked midpoint elbow was
        occlusive whenever it fired. Now: the classic elbow only if fully
        verified clean, else a clamped stem above the child (mobile idiom),
