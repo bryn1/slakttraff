@@ -368,7 +368,10 @@ def test_frontend_has_no_root_absolute_urls():
 
 
 def test_static_assets_served():
-    for path in ("/style.css", "/tree.css", "/forms.css", "/api.js", "/tree.js", "/app.js"):
+    # modal.css (RSVP popup) and tree-lines.js (connector overlay) shipped in the redesign;
+    # a 404 of either under the /slakttraff/ prefix must not leave the suite green.
+    for path in ("/style.css", "/tree.css", "/forms.css", "/modal.css",
+                 "/api.js", "/tree.js", "/app.js", "/tree-lines.js"):
         r = client.get(path)
         assert r.status_code == 200, path
 
