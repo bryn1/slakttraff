@@ -76,7 +76,11 @@ teddy/
   style.css           design tokens (:root), base layout, header, password
                       screen, sections + instructions/stats, responsive;
                       tree/form/popup presentation lives in the files below
-  tree.css            family tree, person spots, RSVP colour states (green/red)
+  tree.css            family tree, person spots, RSVP colour states (green/red),
+                      the generation colour legend (.tree-legend, 111-144), and
+                      the SVG connector-overlay/junction-dot styles plus the
+                      <=640px presentation (stacked bands, half-width cards,
+                      simplified stems) at 168-231
   forms.css           registration form + success message
   modal.css           RSVP popup (person modal): overlay, content card with a
                       per-generation accent bar, RSVP buttons; the popup's
